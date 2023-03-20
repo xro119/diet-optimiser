@@ -1,5 +1,6 @@
 from dietOptimiserVars import *
-import pprint, sys, time
+import time
+from functools import reduce
 
 
 class DietOptimiser:
@@ -138,23 +139,30 @@ class DietOptimiser:
                     "minServings": self.minsMap,
                     "maxServings": self.maxsMap
                     }
-        self.calorieCost = {c: self.foodStorage[c]["Cost"] / (self.foodStorage[c]["Calories"] or 0.1) for c in self.foodStorage.keys()}
-        self.fatCost = {c: self.foodStorage[c]["Cost"] / (self.foodStorage[c]["Fats"] or 0.1) for c in self.foodStorage.keys()}
-        self.proteinCost = {c: self.foodStorage[c]["Cost"] / (self.foodStorage[c]["Proteins"] or 0.1) for c in self.foodStorage.keys()}
-        self.carbCost = {c: self.foodStorage[c]["Cost"] / (self.foodStorage[c]["Carbs"] or 0.1) for c in self.foodStorage.keys()}
+        self.calorieCost = dict(
+            sorted({c: self.foodStorage[c]["Cost"] / (self.foodStorage[c]["Calories"] or 0.1) for c in self.foodStorage.keys()}.items(), key=lambda item: item[1], reverse=False))
+        self.fatCost = dict(
+            sorted({c: self.foodStorage[c]["Cost"] / (self.foodStorage[c]["Fats"] or 0.1) for c in self.foodStorage.keys()}.items(), key=lambda item: item[1], reverse=False))
+        self.proteinCost = dict(
+            sorted({c: self.foodStorage[c]["Cost"] / (self.foodStorage[c]["Proteins"] or 0.1) for c in self.foodStorage.keys()}.items(), key=lambda item: item[1], reverse=False))
+        self.carbCost = dict(
+            sorted({c: self.foodStorage[c]["Cost"] / (self.foodStorage[c]["Carbs"] or 0.1) for c in self.foodStorage.keys()}.items(), key=lambda item: item[1], reverse=False))
+        self.mapCost = {"Calories": self.calorieCost,
+                        "Fats": self.fatCost,
+                        "Proteins": self.proteinCost,
+                        "Carbs": self.carbCost,
+                        }
 
-    def makeDietPlan(self, *args, **kwargs):
+    def makeDietPlan(self):
         """
         Makes a daily diet for 1 person for 1 week
-        :param args:
-        :param kwargs:
         :return: A daily meal plan for 1 week
         """
         # distribute the minimum required servings of meals each other day
         day = 1
         for food, value in dict(sorted(self.minsMap.items(), key=lambda item: item[1], reverse=False)).items():
             for count in range(value):
-                day = self.checkNutrientLimits(food, day)
+                day = self.checkNutrientLimits(food, day, checkOther=True)
                 if not type(day) == int:
                     print(day)
                     return False
@@ -170,21 +178,47 @@ class DietOptimiser:
         # print([self.calculateDailyNutrient("Carbs", "day" + str(x)) for x in range(1, 8)], self.nutrientValues["Carbs"])
         # print([self.calculateDailyNutrient("Fats", "day" + str(x)) for x in range(1, 8)], self.nutrientValues["Fats"])
         # print([self.calculateDailyNutrient("Proteins", "day" + str(x)) for x in range(1, 8)], self.nutrientValues["Proteins"])
-
+        # print(self.mapCost)
         for day in self.dailyMeals.keys():
+            for nutrient in ["Proteins", "Fats", "Carbs", "Calories"]:
+                value = self.calculateDailyNutrient(nutrient, day)
+                print("1", day, nutrient, value)
+                if value <= self.nutrientValues[nutrient]["minValue"]:
+                    print("2", day, nutrient, value, self.nutrientValues[nutrient]["minValue"])
+                    timeout = time.time() + 1
+                    while value <= self.nutrientValues[nutrient]["minValue"] and time.time() < timeout:
+                        print("2.5", day, nutrient, value, self.nutrientValues[nutrient]["minValue"])
+                        # add items based on cost/nutrient
+                        for item in self.mapCost[nutrient].keys():
+                            countServings = reduce(lambda x, y: x + y, [x for x in self.dailyMeals.values()]).count(item)
+                            print("2.6", item, self.checkNutrientLimits(item, day[-1]), countServings + 1 <= self.foodStorage[item]["maxServings"])
+                            if self.checkNutrientLimits(item, day[-1]) and countServings + 1 <= self.foodStorage[item]["maxServings"]:
+                                self.dailyMeals[day].append(item)
+                                print("333", self.map[nutrient][item])
+                                value += self.map[nutrient][item]
+                                timeout = time.time() + 2
+                                print("4", day, nutrient, value, self.nutrientValues[nutrient]["minValue"])
+                    if time.time() > timeout:
+                        message = f"No values can be found that apply to the limits set! Add more servings, increase the limits for nutrients or add more food items and retry!"
+                        return message
+
+        message = "\nDaily Diet optimised by cost for the foods you have added and limits set is:\n\n"
+        for day, items in self.dailyMeals.items():
+            message += f"{day} includes the folowing items:\n{', '.join([str(self.foodStorage[food]['Serving']) + 'grams of ' + food for food in self.dailyMeals[day]])}\n" \
+                       f"and has a daily nutrient intake of:\n"
             for nutrient in ["Calories", "Carbs", "Fats", "Proteins"]:
-                value=self.calculateDailyNutrient(nutrient, day)
-                if value<self.nutrientValues[nutrient]["minValue"]:
-                    print (day, nutrient, value, self.nutrientValues[nutrient]["minValue"])
+                message += f"{nutrient} : {self.calculateDailyNutrient(nutrient, day)}\n"
+            message += "\n"
+        return message
 
         # pprint.pprint(self.dailyMeals)
-        print(self.calculateDailyNutrient("Calories"))
+        # print(self.calculateDailyNutrient("Calories"))
         # print(self.calculateDailyNutrient("Carbs"))
         # print(self.calculateDailyNutrient("Fats"))
         # print(self.calculateDailyNutrient("Proteins"))
         # print(self.foodStorage.keys())
 
-    def checkNutrientLimits(self, food, day, check="maxValue", checkOther=True):
+    def checkNutrientLimits(self, food, day, checkOther=False):
         """
         Checks if food can exceed maxValue of nutrition for a given day. Returns posible days to add item within limits or error.
         :param food: name of item
@@ -197,26 +231,30 @@ class DietOptimiser:
         error = False
         timeout = time.time() + 0.5
         while not ok and time.time() < timeout:
-            for nutrient in ["Calories", "Carbs", "Fats", "Proteins"]:
-                if self.calculateDailyNutrient(nutrient, day="day" + str(day)) + self.map[nutrient][food] <= self.nutrientValues[nutrient][check]:
+            for nutrient in ["Fats", "Carbs", "Proteins", "Calories"]:
+                print(day, nutrient, self.calculateDailyNutrient(nutrient, day="day" + str(day)) + self.map[nutrient][food] <= self.nutrientValues[nutrient]["maxValue"],
+                      self.nutrientValues[nutrient]["maxValue"])
+                if self.calculateDailyNutrient(nutrient, day="day" + str(day)) + self.map[nutrient][food] <= self.nutrientValues[nutrient]["maxValue"]:
+                    print(day, nutrient, self.calculateDailyNutrient(nutrient, day="day" + str(day)) + self.map[nutrient][food])
                     ok = True
+                    continue
                 else:
+                    ok = False
                     if checkOther:
                         day += 1
                         if day == 8:
                             day = 1
-                        ok = False
-                        error = f'Required food servings are more than the maximum nutritional value of {self.nutrientValues[nutrient][check]} for {nutrient}! \n\
+                        error = f'Required food servings are more than the maximum nutritional value of {self.nutrientValues[nutrient]["maxValue"]} for {nutrient}! \n\
 Please reduce the required food servings or increase the maximum nutritional values!'
                     else:
                         return False
-                    break
+                        break
         if time.time() > timeout:
             return error
-        elif check == "minValue":
-            return True
-        else:
+        elif checkOther:
             return int(day)
+        elif ok:
+            return True
 
     @checkArgs
     def calculateDailyNutrient(self, nutrient, day="day0"):
@@ -263,21 +301,22 @@ if __name__ == "__main__":
     diet.addItem("Banana", 6, 180, 46, 1, 2, 200)
     diet.addItem("Apple", 4, 100, 26, 0, 0, 200)
     diet.addItem("Salad", 8, 60, 12, 0, 0, 200)
+    # diet.addItem("Protein", 1, 10, 0, 0, 10, 100)
 
     diet.setServings("1/2 Chicken", 3, 5)
-    diet.setServings("Oat", 4, 4)
+    diet.setServings("Oat", 4, 9)
     diet.setServings("Chicken Feet", 3, 8)
     diet.setServings("Almonds", 10, 10)
     diet.setServings("Ramen", 2, 7)
     diet.setServings("Tofu", 3, 7)
     diet.setServings("Apple", 8, 10)
     diet.setServings("Banana", 8, 10)
-    diet.setServings("Salad", 9, 10)
+    diet.setServings("Salad", 3, 10)
     diet.setServings("Beef", 3, 5)
 
-    diet.setNutrientValues("Calories", 1800, 1950)
-    diet.setNutrientValues("Carbs", 100, 250)
-    diet.setNutrientValues("Fats", 50, 200)
-    diet.setNutrientValues("Proteins", 100, 220)
+    diet.setNutrientValues("Calories", 2500, 3550)
+    diet.setNutrientValues("Carbs", 50, 200)
+    diet.setNutrientValues("Fats", 20, 200)
+    diet.setNutrientValues("Proteins", 50, 200)
 
-    diet.makeDietPlan()
+    print(diet.makeDietPlan())
