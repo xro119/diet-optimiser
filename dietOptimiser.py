@@ -135,39 +135,10 @@ class DietOptimiser:
             self.nutrientValues[nutrient]["maxValue"] = maxNutrient
             return True
 
-    def updateMaps(self):
-        """
-        Updates maps used in optimizations
-        :return:
-        """
-        self.caloMap = {c: self.foodStorage[c]["Calories"] for c in self.foodStorage.keys()}
-        self.fatsMap = {c: self.foodStorage[c]["Fats"] for c in self.foodStorage.keys()}
-        self.protMap = {c: self.foodStorage[c]["Proteins"] for c in self.foodStorage.keys()}
-        self.carbMap = {c: self.foodStorage[c]["Carbs"] for c in self.foodStorage.keys()}
-        self.minsMap = {c: self.foodStorage[c]["minServings"] for c in self.foodStorage.keys()}
-        self.maxsMap = {c: self.foodStorage[c]["maxServings"] for c in self.foodStorage.keys()}
-        self.costMap = {c: self.foodStorage[c]["maxServings"] for c in self.foodStorage.keys()}
-        self.map = {"Calories": self.caloMap,
-                    "Fats": self.fatsMap,
-                    "Proteins": self.protMap,
-                    "Carbs": self.carbMap,
-                    "minServings": self.minsMap,
-                    "maxServings": self.maxsMap,
-                    "Cost": self.costMap
-                    }
-        self.calorieCost = dict(sorted({c: self.foodStorage[c]["Cost"] / (self.foodStorage[c]["Calories"] or 0.1) for c in self.foodStorage.keys()}.items(), key=lambda item: item[1], reverse=False))
-        self.fatCost = dict(sorted({c: self.foodStorage[c]["Cost"] / (self.foodStorage[c]["Fats"] or 0.1) for c in self.foodStorage.keys()}.items(), key=lambda item: item[1], reverse=False))
-        self.proteinCost = dict(sorted({c: self.foodStorage[c]["Cost"] / (self.foodStorage[c]["Proteins"] or 0.1) for c in self.foodStorage.keys()}.items(), key=lambda item: item[1], reverse=False))
-        self.carbCost = dict(sorted({c: self.foodStorage[c]["Cost"] / (self.foodStorage[c]["Carbs"] or 0.1) for c in self.foodStorage.keys()}.items(), key=lambda item: item[1], reverse=False))
-        self.mapCost = {"Calories": self.calorieCost,
-                        "Fats": self.fatCost,
-                        "Proteins": self.proteinCost,
-                        "Carbs": self.carbCost,
-                        }
-
     def makeDietPlan(self, onlyRequiredServings=False):
         """
-        Makes a daily diet for 1 person for 1 week with the lowest cost
+        Makes a daily diet for 1 person for 1 week optimised on lowest cost
+        param onlyRequiredServings: Flag can be set to show the diet with the required food servings only.
         :return: A daily meal plan for 1 week
         """
         self.reset()
@@ -271,6 +242,36 @@ Please reduce the required food servings or increase the maximum nutritional val
             each_day += f"{d} total {nutrient} is {total_value}\n"
         return each_day
 
+    def updateMaps(self):
+        """
+        Updates maps used in optimizations
+        :return:
+        """
+        self.caloMap = {c: self.foodStorage[c]["Calories"] for c in self.foodStorage.keys()}
+        self.fatsMap = {c: self.foodStorage[c]["Fats"] for c in self.foodStorage.keys()}
+        self.protMap = {c: self.foodStorage[c]["Proteins"] for c in self.foodStorage.keys()}
+        self.carbMap = {c: self.foodStorage[c]["Carbs"] for c in self.foodStorage.keys()}
+        self.minsMap = {c: self.foodStorage[c]["minServings"] for c in self.foodStorage.keys()}
+        self.maxsMap = {c: self.foodStorage[c]["maxServings"] for c in self.foodStorage.keys()}
+        self.costMap = {c: self.foodStorage[c]["maxServings"] for c in self.foodStorage.keys()}
+        self.map = {"Calories": self.caloMap,
+                    "Fats": self.fatsMap,
+                    "Proteins": self.protMap,
+                    "Carbs": self.carbMap,
+                    "minServings": self.minsMap,
+                    "maxServings": self.maxsMap,
+                    "Cost": self.costMap
+                    }
+        self.calorieCost = dict(sorted({c: self.foodStorage[c]["Cost"] / (self.foodStorage[c]["Calories"] or 0.1) for c in self.foodStorage.keys()}.items(), key=lambda item: item[1], reverse=False))
+        self.fatCost = dict(sorted({c: self.foodStorage[c]["Cost"] / (self.foodStorage[c]["Fats"] or 0.1) for c in self.foodStorage.keys()}.items(), key=lambda item: item[1], reverse=False))
+        self.proteinCost = dict(sorted({c: self.foodStorage[c]["Cost"] / (self.foodStorage[c]["Proteins"] or 0.1) for c in self.foodStorage.keys()}.items(), key=lambda item: item[1], reverse=False))
+        self.carbCost = dict(sorted({c: self.foodStorage[c]["Cost"] / (self.foodStorage[c]["Carbs"] or 0.1) for c in self.foodStorage.keys()}.items(), key=lambda item: item[1], reverse=False))
+        self.mapCost = {"Calories": self.calorieCost,
+                        "Fats": self.fatCost,
+                        "Proteins": self.proteinCost,
+                        "Carbs": self.carbCost,
+                        }
+
 
 if __name__ == "__main__":
     diet = DietOptimiser()
@@ -284,9 +285,9 @@ if __name__ == "__main__":
     diet.addItem("Tender Loin", 42, 440, 0, 36, 40, 200)
     diet.addItem("Chicken Wings", 22, 410, 0, 30, 32, 200)
     diet.addItem("1/2 Chicken", 30, 570, 0, 40, 50, 400)
-    diet.addItem("Peanuts", 5, 250, 6, 22, 12, 50, 1, 5) #
+    diet.addItem("Peanuts", 5, 250, 6, 22, 12, 50, 1, 5)  #
     diet.addItem("Ramen", 49, 1160, 88, 19, 14, 400)
-    diet.addItem("Bologna", 24, 556, 4, 40, 20, 200, 5) #
+    diet.addItem("Bologna", 24, 556, 4, 40, 20, 200, 5)  #
     diet.addItem("Tofu", 8, 160, 6, 10, 15, 200)
     diet.addItem("Scrambled Eggs", 5, 360, 2, 28, 24, 200)
     diet.addItem("Omelette & Bacon", 9, 630, 3, 50, 40, 200)
