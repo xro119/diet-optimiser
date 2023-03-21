@@ -84,6 +84,9 @@ class DietOptimiser:
         if not all(isinstance(i, int) for i in [cost, calories, carbs, fat, protein, serving]):
             print(f"Item nutrients and cost must be integers!")
             return False
+        elif name in self.foodStorage.keys():
+            print(f"Item already added! name must be unique! Please retry")
+            return False
         else:
             self.foodStorage[name] = {
                 "Calories": calories,
