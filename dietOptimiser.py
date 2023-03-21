@@ -67,7 +67,7 @@ class DietOptimiser:
 
         return inner
 
-    def addItem(self, name, cost, calories, carbs, fat, protein, serving):
+    def addItem(self, name, cost, calories, carbs, fat, protein, serving, minServings=0, maxServings=10):
         """
         Adds food items to class memory. Stores each item in a dictionary.
         :param name: Name of food item
@@ -77,6 +77,8 @@ class DietOptimiser:
         :param fat: Number of fat of food serving in grams
         :param protein: Number of protein of food serving in grams
         :param serving: Weight of Food serving in grams or milliliters
+        :param minServings: Minimum portions required to plan diet
+        :param maxServings: Maximum portions required to plan diet
         :return: True if item was added successfully
         """
         if not all(isinstance(i, int) for i in [cost, calories, carbs, fat, protein, serving]):
@@ -90,8 +92,8 @@ class DietOptimiser:
                 "Proteins": protein,
                 "Serving": serving,
                 "Cost": cost,
-                "minServings": 0,
-                "maxServings": 10
+                "minServings": minServings,
+                "maxServings": maxServings
             }
             self.updateMaps()
             return True
@@ -282,9 +284,9 @@ if __name__ == "__main__":
     diet.addItem("Tender Loin", 42, 440, 0, 36, 40, 200)
     diet.addItem("Chicken Wings", 22, 410, 0, 30, 32, 200)
     diet.addItem("1/2 Chicken", 30, 570, 0, 40, 50, 400)
-    diet.addItem("Peanuts", 5, 250, 6, 22, 12, 50)
+    diet.addItem("Peanuts", 5, 250, 6, 22, 12, 50, 1, 5) #
     diet.addItem("Ramen", 49, 1160, 88, 19, 14, 400)
-    diet.addItem("Bologna", 24, 556, 4, 40, 20, 200)
+    diet.addItem("Bologna", 24, 556, 4, 40, 20, 200, 5) #
     diet.addItem("Tofu", 8, 160, 6, 10, 15, 200)
     diet.addItem("Scrambled Eggs", 5, 360, 2, 28, 24, 200)
     diet.addItem("Omelette & Bacon", 9, 630, 3, 50, 40, 200)
@@ -305,12 +307,12 @@ if __name__ == "__main__":
     diet.setServings("Apple", 8, 10)
     diet.setServings("Banana", 8, 10)
     diet.setServings("Salad", 3, 10)
-    diet.setServings("Beef", 3, 5)
+    diet.setServings("Beef", 1, 10)
 
     diet.setNutrientValues("Calories", 1800, 2340)
-    diet.setNutrientValues("Carbs", 50, 200)
-    diet.setNutrientValues("Fats", 30, 200)
-    diet.setNutrientValues("Proteins", 50, 200)
+    diet.setNutrientValues("Carbs", 50, 300)
+    diet.setNutrientValues("Fats", 50, 200)
+    diet.setNutrientValues("Proteins", 100, 200)
     print(diet.makeDietPlan(onlyRequiredServings=True))
     print(diet.makeDietPlan())
-    diet()
+    # diet()
