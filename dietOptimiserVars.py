@@ -1,9 +1,9 @@
 # daily nutrient intake vars
-minProteins = 100
+minProteins = 50
 maxProteins = 200
 minFats = 50
 maxFats = 200
-minCarbs = 300
-maxCarbs = 500
-minCalories = 2030
-maxCalories = 2230
+minCarbs = 50
+maxCarbs = 300
+minCalories = 1830
+maxCalories = 3330
