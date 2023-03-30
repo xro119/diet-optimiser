@@ -6,8 +6,8 @@ This class is designed to allow users to calculate optimal diets according to gi
 `python 3.8+`
 <h3>How to use:</h3>
 
-1. Import DietOptimiser class from the dietOptimiser module.\
-2. Create an instance of DietOptimiser class.\
+1. Import DietOptimiser class from the dietOptimiser module.
+2. Create an instance of DietOptimiser class.
 3. Use the addItem method to add food items to the class memory. The method takes arguments name, cost, calories, carbs, fat, protein, serving, minServings, and maxServings.
    * **name** is the name of the food item (string).
    * **cost** is the cost of the food item (integer).
@@ -15,7 +15,7 @@ This class is designed to allow users to calculate optimal diets according to gi
    * **carbs** is the number of carbohydrates in the food item (integer).
    * **fat** is the amount of fat in the food item (integer).
    * **protein** is the amount of protein in the food item (integer).
-   * **serving** is the serving size for the food item (integer).\
+   * **serving** is the serving size for the food item (integer).
    * minServings is the minimum number of servings per week (integer).
    * maxServings is the maximum number of servings per week (integer).
     ```
@@ -24,20 +24,20 @@ This class is designed to allow users to calculate optimal diets according to gi
     #dietOptimiser.addItem(name, cost, calories, carbs, fat, protein, serving)
     diet.addItem("Beef", 32, 420, 0, 28, 40, 200)
     ```
-4. Setting minimum and maximum portion sizes:\
+4. Setting minimum and maximum portion sizes:
 The default values for food servings is min=0 and max=10, but you can set the minimum and maximum portion sizes for when adding each food item or by using **setServings**() method:
     ```
     dietOptimiser.setServings(item, minServings, maxServings)
     diet.setServings("1/2 Chicken", 3, 5)
     ```
-5. Setting nutrient requirements:\
+5. Setting nutrient requirements:
 You can set your nutrient requirements using the dietOptimiserVars.py variables or by using the method **setNutrientValues**():
 
     `dietOptimiser.setNutrientValues(nutrient, minNutrient, maxNutrient)`
 
-6. Generating a diet plan\
+6. Generating a diet plan
 
-    You can generate a diet plan that meets your nutrient requirements using the **generateDietPlan**() method:\
+    You can generate a diet plan that meets your nutrient requirements using the **generateDietPlan**() method:
     
     ```
    print(diet.makeDietPlan(onlyRequiredServings=True))
